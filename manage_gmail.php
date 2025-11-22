@@ -1,9 +1,25 @@
+<?php
+$creds_file = __DIR__ . '/credentials.json';
+if (!file_exists($creds_file)) {
+    die('Error: credentials.json not found');
+}
+$creds = json_decode(file_get_contents($creds_file), true);
+$client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '';
+?>
 <!DOCTYPE html>
 <html>
 <head>
     <title>Gmail Manager</title>
     <meta charset="utf-8"/>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+        window.GMAIL_CONFIG = {
+            clientId: "<?php echo $client_id; ?>"
+        };
+    </script>
     <style>
         .email-row {
             transition: background-color 0.2s;
@@ -56,30 +72,42 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen font-sans">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-300">
 
 <div id="authStatus" class="fixed top-4 right-4 px-4 py-2 rounded shadow-lg hidden z-50"></div>
 
-<div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">Gmail Manager</h1>
-        <div>
-            <button id="authorize_button" onclick="handleAuthClick()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition hidden">Authorize</button>
-            <button id="signout_button" onclick="handleSignoutClick()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow transition hidden">Sign Out</button>
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 text-center md:text-left">
+            Gmail Manager
+        </h1>
+        <div class="flex flex-wrap justify-center items-center gap-4">
+            <a href="all_emails.php" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm md:text-base">All Emails Stats</a>
+            <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                <!-- Sun Icon -->
+                <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Moon Icon -->
+                <svg id="moonIcon" class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <button id="authorize_button" onclick="handleAuthClick()" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition hidden text-sm md:text-base">Authorize</button>
+            <button id="signout_button" onclick="handleSignoutClick()" class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold py-2 px-4 rounded-lg shadow-md hover:shadow-lg transition hidden text-sm md:text-base">Sign Out</button>
         </div>
     </div>
 
-    <div id="controls" class="bg-white p-4 rounded-lg shadow mb-6 hidden">
-        <div class="flex flex-wrap gap-4 items-center justify-between">
-            <div class="flex gap-2">
-                <button onclick="refreshEmails()" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded transition">
+    <div id="controls" class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg mb-8 hidden transition-colors duration-300">
+        <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start">
+                <button onclick="refreshEmails()" class="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-2 px-4 rounded-lg transition shadow-sm text-sm md:text-base">
                     Refresh
                 </button>
-                <button onclick="deleteSelectedEmails()" class="bg-red-100 hover:bg-red-200 text-red-700 font-semibold py-2 px-4 rounded transition">
+                <button onclick="deleteSelectedEmails()" class="bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 font-semibold py-2 px-4 rounded-lg transition shadow-sm border border-red-200 dark:border-red-800 text-sm md:text-base">
                     Delete Selected
                 </button>
-                <div class="relative inline-block text-left">
-                    <select id="labelAction" onchange="handleLabelAction(this.value)" class="bg-gray-100 border border-gray-300 text-gray-700 py-2 px-4 rounded focus:outline-none focus:bg-white focus:border-gray-500">
+                <button onclick="promptDeleteBySender()" class="bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 text-orange-700 dark:text-orange-400 font-semibold py-2 px-4 rounded-lg transition shadow-sm border border-orange-200 dark:border-orange-800 text-sm md:text-base">
+                    Delete All from Sender
+                </button>
+                <div class="relative inline-block text-left w-full sm:w-auto">
+                    <select id="labelAction" onchange="handleLabelAction(this.value)" class="w-full sm:w-auto bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm md:text-base">
                         <option value="">Manage Labels...</option>
                         <option value="STARRED">Add Star</option>
                         <option value="UNREAD">Mark as Unread</option>
@@ -89,46 +117,53 @@
                     </select>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <input type="text" id="searchInput" placeholder="Search emails..." class="border border-gray-300 rounded px-4 py-2 w-64 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="searchEmails()" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded transition">
+            <div class="flex gap-2 w-full lg:w-auto">
+                <input type="text" id="searchInput" placeholder="Search emails..." class="flex-grow lg:w-64 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm md:text-base">
+                <button onclick="searchEmails()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition shadow-md text-sm md:text-base">
                     Search
                 </button>
             </div>
         </div>
     </div>
 
-    <div id="emailListContainer" class="bg-white rounded-lg shadow overflow-hidden hidden">
-        <table class="min-w-full leading-normal">
+    <div id="emailListContainer" class="bg-white dark:bg-gray-800 rounded-xl shadow-xl overflow-hidden hidden transition-colors duration-300">
+        <!-- Desktop Table View -->
+        <table class="min-w-full leading-normal hidden md:table">
             <thead>
                 <tr>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-10">
-                        <input type="checkbox" onchange="toggleSelectAll(this)" class="form-checkbox h-4 w-4 text-blue-600">
+                    <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider w-10">
+                        <input type="checkbox" onchange="toggleSelectAll(this)" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500">
                     </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/4">
+                    <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider w-1/4">
                         Sender
                     </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
                         Subject
                     </th>
-                    <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
+                    <th class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider w-32">
                         Date
                     </th>
                 </tr>
             </thead>
-            <tbody id="emailsBody">
+            <tbody id="emailsBody" class="divide-y divide-gray-200 dark:divide-gray-700">
                 <!-- Emails will be inserted here -->
             </tbody>
         </table>
-        <div class="px-5 py-5 bg-white border-t flex flex-col xs:flex-row items-center xs:justify-between">
-            <span id="pagingInfo" class="text-xs xs:text-sm text-gray-900">
+
+        <!-- Mobile Card View -->
+        <div id="mobileEmailList" class="md:hidden grid grid-cols-1 divide-y divide-gray-200 dark:divide-gray-700">
+            <!-- Mobile cards will be inserted here -->
+        </div>
+
+        <div class="px-5 py-5 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700 flex flex-col xs:flex-row items-center xs:justify-between">
+            <span id="pagingInfo" class="text-xs xs:text-sm text-gray-600 dark:text-gray-400 mb-2 xs:mb-0">
                 Showing emails
             </span>
-            <div class="inline-flex mt-2 xs:mt-0">
-                <button onclick="getPrevPage()" id="prevBtn" class="text-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-l disabled:opacity-50" disabled>
+            <div class="inline-flex rounded-md shadow-sm">
+                <button onclick="getPrevPage()" id="prevBtn" class="text-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-l-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>
                     Prev
                 </button>
-                <button onclick="getNextPage()" id="nextBtn" class="text-sm bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-2 px-4 rounded-r disabled:opacity-50" disabled>
+                <button onclick="getNextPage()" id="nextBtn" class="text-sm bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-2 px-4 border-t border-b border-r border-gray-300 dark:border-gray-600 rounded-r-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors" disabled>
                     Next
                 </button>
             </div>
@@ -138,124 +173,48 @@
 
 <!-- Email View Modal -->
 <div id="emailModal" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h2 id="modalSubject" class="text-xl font-semibold text-gray-800 truncate pr-4"></h2>
-            <span class="close text-gray-500 hover:text-gray-800 cursor-pointer text-2xl" onclick="closeModal()">&times;</span>
+    <div class="modal-content dark:bg-gray-800 dark:text-white w-full md:w-4/5 max-w-4xl m-4 md:m-auto h-[90vh] md:h-auto flex flex-col rounded-lg shadow-2xl">
+        <div class="modal-header dark:border-gray-700 p-4 border-b flex justify-between items-center">
+            <h2 id="modalSubject" class="text-lg md:text-xl font-semibold text-gray-800 dark:text-white truncate pr-4"></h2>
+            <span class="close text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white cursor-pointer text-2xl" onclick="closeModal()">&times;</span>
         </div>
-        <div class="p-4 bg-gray-50 border-b border-gray-200">
-            <div class="flex justify-between mb-2">
-                <span id="modalFrom" class="font-medium text-gray-700"></span>
-                <span id="modalDate" class="text-sm text-gray-500"></span>
+        <div class="p-4 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col sm:flex-row justify-between mb-2 gap-1">
+                <span id="modalFrom" class="font-medium text-gray-700 dark:text-gray-300 text-sm md:text-base break-all"></span>
+                <span id="modalDate" class="text-xs md:text-sm text-gray-500 dark:text-gray-400"></span>
             </div>
             <div id="modalLabels" class="flex flex-wrap gap-1"></div>
         </div>
-        <div id="modalBody" class="modal-body prose max-w-none"></div>
+        <div id="modalBody" class="modal-body prose max-w-none dark:prose-invert p-4 flex-grow overflow-y-auto"></div>
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+             <button onclick="closeModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow w-full sm:w-auto">Okay</button>
+        </div>
     </div>
 </div>
 
+<script src="js/gmail_api.js"></script>
 <script type="text/javascript">
-    const CLIENT_ID = '521496165001-umur3bumfmljk64qvkta1911jp7n72co.apps.googleusercontent.com';
-    const API_KEY = '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';
-    const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest';
-    const SCOPES = [
-        "https://mail.google.com/",
-        "https://www.googleapis.com/auth/gmail.readonly",
-        "https://www.googleapis.com/auth/gmail.modify"
-    ];
-
-    let tokenClient;
-    let gapiInited = false;
-    let gisInited = false;
+    let currentPageToken = null;
     let nextPageToken = null;
-    let pageStack = []; // To handle "Previous" functionality
+    let pageStack = []; 
 
-    function gapiLoaded() {
-        gapi.load('client:auth2', initializeGapiClient);
-    }
-
-    async function initializeGapiClient() {
-        await gapi.client.init({
-            apiKey: API_KEY,
-            clientId: CLIENT_ID,
-            discoveryDocs: [DISCOVERY_DOC],
-            scope: SCOPES.join(' ')
-        });
-        gapiInited = true;
-        maybeEnableButtons();
-    }
-
-    function gisLoaded() {
-        tokenClient = google.accounts.oauth2.initTokenClient({
-            client_id: CLIENT_ID,
-            scope: SCOPES.join(' '),
-            callback: handleAuthCallback
-        });
-        gisInited = true;
-        maybeEnableButtons();
-    }
-
-    function maybeEnableButtons() {
-        if (gapiInited && gisInited) {
-            document.getElementById('authorize_button').classList.remove('hidden');
-        }
-    }
-
-    function handleAuthClick() {
-        if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-            handleSignoutClick();
-        } else {
-            tokenClient.requestAccessToken({prompt: 'select_account'});
-        }
-    }
-
-    function handleAuthCallback(response) {
-        if (response.error) {
-            updateAuthStatus('Authorization Failed', false);
-        } else {
-            gapi.client.load('gmail', 'v1', function() {
-                updateAuthStatus('Authorized', true);
-                document.getElementById('authorize_button').classList.add('hidden');
-                document.getElementById('signout_button').classList.remove('hidden');
-                document.getElementById('controls').classList.remove('hidden');
-                document.getElementById('emailListContainer').classList.remove('hidden');
-                refreshEmails();
-            });
-        }
-    }
-
-    function handleSignoutClick() {
-        const auth2 = gapi.auth2.getAuthInstance();
-        if (auth2 != null) {
-            auth2.signOut().then(function () {
-                auth2.disconnect();
-            });
-        }
-        document.getElementById('emailsBody').innerHTML = '';
-        document.getElementById('authorize_button').classList.remove('hidden');
-        document.getElementById('signout_button').classList.add('hidden');
-        document.getElementById('controls').classList.add('hidden');
-        document.getElementById('emailListContainer').classList.add('hidden');
-        updateAuthStatus('Signed Out', false);
-    }
-
-    function updateAuthStatus(msg, isSuccess) {
-        const status = document.getElementById('authStatus');
-        status.textContent = msg;
-        status.className = `fixed top-4 right-4 px-4 py-2 rounded shadow-lg z-50 text-white ${isSuccess ? 'bg-green-500' : 'bg-red-500'}`;
-        status.style.display = 'block';
-        setTimeout(() => { status.style.display = 'none'; }, 3000);
-    }
+    // Initialize Theme on Load
+    initTheme();
 
     async function refreshEmails() {
         nextPageToken = null;
         pageStack = [];
-        await loadEmails();
+        currentPageToken = null;
+        await loadEmails(null);
     }
 
-    async function loadEmails(pageToken = null) {
-        document.getElementById('emailsBody').innerHTML = '<tr><td colspan="4" class="text-center py-4">Loading...</td></tr>';
+    async function loadEmails(pageToken) {
+        const loadingHtml = '<tr><td colspan="4" class="text-center py-4 dark:text-gray-300">Loading...</td></tr>';
+        document.getElementById('emailsBody').innerHTML = loadingHtml;
+        document.getElementById('mobileEmailList').innerHTML = '<div class="text-center py-4 dark:text-gray-300">Loading...</div>';
         
+        currentPageToken = pageToken;
+
         try {
             const response = await gapi.client.gmail.users.messages.list({
                 'userId': 'me',
@@ -267,24 +226,26 @@
             const messages = response.result.messages;
             const nextToken = response.result.nextPageToken;
             
-            // Update pagination controls
-            document.getElementById('nextBtn').disabled = !nextToken;
+            nextPageToken = nextToken || null;
+
+            document.getElementById('nextBtn').disabled = !nextPageToken;
             document.getElementById('prevBtn').disabled = pageStack.length === 0;
-            
-            if (nextToken) nextPageToken = nextToken;
 
             if (!messages || messages.length === 0) {
-                document.getElementById('emailsBody').innerHTML = '<tr><td colspan="4" class="text-center py-4">No emails found.</td></tr>';
+                const noEmailsHtml = '<tr><td colspan="4" class="text-center py-4 dark:text-gray-300">No emails found.</td></tr>';
+                document.getElementById('emailsBody').innerHTML = noEmailsHtml;
+                document.getElementById('mobileEmailList').innerHTML = '<div class="text-center py-4 dark:text-gray-300">No emails found.</div>';
                 return;
             }
 
-            // Fetch details for all messages in parallel
             const details = await Promise.all(messages.map(msg => getEmailMetadata(msg.id)));
             renderEmails(details);
 
         } catch (err) {
             console.error(err);
-            document.getElementById('emailsBody').innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error: ${err.message}</td></tr>`;
+            const errorHtml = `<tr><td colspan="4" class="text-center py-4 text-red-500">Error: ${err.message}</td></tr>`;
+            document.getElementById('emailsBody').innerHTML = errorHtml;
+            document.getElementById('mobileEmailList').innerHTML = `<div class="text-center py-4 text-red-500">Error: ${err.message}</div>`;
         }
     }
 
@@ -305,7 +266,9 @@
 
     function renderEmails(emails) {
         const tbody = document.getElementById('emailsBody');
+        const mobileList = document.getElementById('mobileEmailList');
         tbody.innerHTML = '';
+        mobileList.innerHTML = '';
         
         emails.forEach(email => {
             if (!email) return;
@@ -317,26 +280,29 @@
             const labels = email.labelIds || [];
             
             const isUnread = labels.includes('UNREAD');
-            const rowClass = isUnread ? 'font-bold bg-white' : 'bg-gray-50 text-gray-600';
+            const rowClass = isUnread 
+                ? 'font-bold bg-white dark:bg-gray-800 text-gray-900 dark:text-white' 
+                : 'bg-gray-50 dark:bg-gray-900/50 text-gray-600 dark:text-gray-400';
 
             const labelBadges = labels.map(l => {
-                if (l === 'UNREAD' || l === 'INBOX' || l === 'CATEGORY_UPDATES' || l === 'CATEGORY_PROMOTIONS') return ''; // Skip common system labels for brevity
-                return `<span class="label-badge">${l}</span>`;
+                if (l === 'UNREAD' || l === 'INBOX' || l === 'CATEGORY_UPDATES' || l === 'CATEGORY_PROMOTIONS') return ''; 
+                return `<span class="label-badge bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2 py-0.5 rounded-full">${l}</span>`;
             }).join('');
 
+            // Desktop Row
             const tr = document.createElement('tr');
-            tr.className = `email-row border-b border-gray-200 ${rowClass} cursor-pointer`;
+            tr.className = `email-row border-b border-gray-200 dark:border-gray-700 ${rowClass} cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`;
             tr.innerHTML = `
                 <td class="px-5 py-5 text-sm">
-                    <input type="checkbox" class="email-checkbox form-checkbox h-4 w-4 text-blue-600" value="${email.id}" onclick="event.stopPropagation()">
+                    <input type="checkbox" class="email-checkbox form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500" value="${email.id}" data-from="${from}" onclick="event.stopPropagation()">
                 </td>
                 <td class="px-5 py-5 text-sm" onclick="openEmail('${email.id}')">
                     <div class="truncate w-64" title="${from}">${from}</div>
                 </td>
                 <td class="px-5 py-5 text-sm" onclick="openEmail('${email.id}')">
-                    <div class="flex items-center">
+                    <div class="flex items-center flex-wrap gap-1">
                         ${labelBadges}
-                        <span class="truncate">${subject}</span>
+                        <span class="truncate ml-1">${subject}</span>
                     </div>
                 </td>
                 <td class="px-5 py-5 text-sm whitespace-nowrap" onclick="openEmail('${email.id}')">
@@ -344,6 +310,25 @@
                 </td>
             `;
             tbody.appendChild(tr);
+
+            // Mobile Card
+            const card = document.createElement('div');
+            card.className = `p-4 ${rowClass} cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors`;
+            card.onclick = () => openEmail(email.id);
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                        <input type="checkbox" class="email-checkbox form-checkbox h-5 w-5 text-blue-600 rounded border-gray-300 dark:border-gray-600 focus:ring-blue-500 flex-shrink-0" value="${email.id}" data-from="${from}" onclick="event.stopPropagation()">
+                        <div class="font-semibold truncate text-sm">${from}</div>
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap ml-2">${date}</div>
+                </div>
+                <div class="mb-2 text-sm truncate font-medium">${subject}</div>
+                <div class="flex flex-wrap gap-1">
+                    ${labelBadges}
+                </div>
+            `;
+            mobileList.appendChild(card);
         });
     }
 
@@ -351,7 +336,7 @@
         const modal = document.getElementById('emailModal');
         const modalBody = document.getElementById('modalBody');
         modal.style.display = 'block';
-        modalBody.innerHTML = '<div class="text-center py-10">Loading...</div>';
+        modalBody.innerHTML = '<div class="text-center py-10 dark:text-gray-300">Loading...</div>';
 
         try {
             const response = await gapi.client.gmail.users.messages.get({
@@ -367,35 +352,26 @@
             document.getElementById('modalFrom').textContent = headers.find(h => h.name === 'From')?.value || 'Unknown';
             document.getElementById('modalDate').textContent = headers.find(h => h.name === 'Date')?.value || '';
             
-            // Render labels
             const labels = email.labelIds || [];
-            document.getElementById('modalLabels').innerHTML = labels.map(l => `<span class="label-badge">${l}</span>`).join('');
+            document.getElementById('modalLabels').innerHTML = labels.map(l => `<span class="label-badge bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">${l}</span>`).join('');
 
-            // Parse Body
             let body = '';
             if (email.payload.parts) {
-                // Multipart
                 const htmlPart = email.payload.parts.find(p => p.mimeType === 'text/html');
                 const textPart = email.payload.parts.find(p => p.mimeType === 'text/plain');
                 body = htmlPart ? decodeBase64(htmlPart.body.data) : (textPart ? decodeBase64(textPart.body.data) : 'No content');
             } else if (email.payload.body.data) {
-                // Single part
                 body = decodeBase64(email.payload.body.data);
             }
             
-            // Sanitize/Safety: In a real app, use DOMPurify. Here we trust Gmail's sanitization to some extent but be careful.
-            // For this demo, we'll put it in an iframe to isolate styles or just render.
-            // Rendering directly for simplicity but beware of CSS conflicts.
-            modalBody.innerHTML = body;
+            modalBody.innerHTML = `<div class="bg-white p-4 rounded text-black">${body}</div>`;
 
-            // Mark as read if unread
             if (labels.includes('UNREAD')) {
                 await gapi.client.gmail.users.messages.modify({
                     'userId': 'me',
                     'id': id,
                     'resource': { 'removeLabelIds': ['UNREAD'] }
                 });
-                // Refresh list in background? Maybe not to avoid jumpiness.
             }
 
         } catch (e) {
@@ -426,27 +402,102 @@
 
     async function deleteSelectedEmails() {
         const ids = getSelectedIds();
-        if (ids.length === 0) return alert('No emails selected');
-        if (!confirm(`Delete ${ids.length} emails?`)) return;
+        if (ids.length === 0) return showAlert('No Selection', 'Please select emails to delete.');
+        
+        showConfirm('Delete Emails', `Are you sure you want to delete ${ids.length} emails?`, async () => {
+            try {
+                await gapi.client.gmail.users.messages.batchDelete({
+                    'userId': 'me',
+                    'ids': ids
+                });
+                updateAuthStatus('Emails deleted', true);
+                refreshEmails();
+            } catch (e) {
+                console.error(e);
+                updateAuthStatus('Error deleting emails', false);
+            }
+        });
+    }
 
-        try {
-            await gapi.client.gmail.users.messages.batchDelete({
-                'userId': 'me',
-                'ids': ids
-            });
-            updateAuthStatus('Emails deleted', true);
-            refreshEmails();
-        } catch (e) {
-            console.error(e);
-            updateAuthStatus('Error deleting emails', false);
+    async function promptDeleteBySender() {
+        const selectedCheckbox = document.querySelector('.email-checkbox:checked');
+        let defaultSender = '';
+        if (selectedCheckbox) {
+            const fromText = selectedCheckbox.getAttribute('data-from');
+            const match = fromText.match(/<(.+)>/);
+            defaultSender = match ? match[1] : fromText;
         }
+
+        // Using prompt here as it's an input. Could replace with a custom input modal later.
+        const sender = prompt("Enter the sender email address to delete ALL emails from:", defaultSender);
+        if (!sender) return;
+
+        showConfirm('Delete All from Sender', `Are you sure you want to delete ALL emails from "${sender}"? This action cannot be undone.`, async () => {
+            updateAuthStatus(`Searching emails from ${sender}...`, true);
+            
+            try {
+                let allIds = [];
+                let pageToken = null;
+                let hasMore = true;
+                
+                while (hasMore) {
+                    const response = await gapi.client.gmail.users.messages.list({
+                        'userId': 'me',
+                        'q': `from:${sender}`,
+                        'pageToken': pageToken,
+                        'maxResults': 500 
+                    });
+                    
+                    const messages = response.result.messages || [];
+                    allIds = allIds.concat(messages.map(m => m.id));
+                    
+                    pageToken = response.result.nextPageToken;
+                    if (!pageToken) hasMore = false;
+                    
+                    updateAuthStatus(`Found ${allIds.length} emails...`, true);
+                    
+                    if (allIds.length > 2000) {
+                        // For safety, we might want to break or ask again. 
+                        // Since we are in a confirm callback, let's just stop at 2000 for this demo or assume user wants all.
+                        // Let's break to avoid infinite loops in demo.
+                        break; 
+                    }
+                }
+
+                if (allIds.length === 0) {
+                    showAlert('No Emails Found', `No emails found from ${sender}`);
+                    updateAuthStatus('No emails found', false);
+                    return;
+                }
+
+                // Second confirmation for the count
+                showConfirm('Confirm Delete', `Found ${allIds.length} emails from ${sender}. Delete them all?`, async () => {
+                    const chunkSize = 1000;
+                    for (let i = 0; i < allIds.length; i += chunkSize) {
+                        const chunk = allIds.slice(i, i + chunkSize);
+                        updateAuthStatus(`Deleting batch ${Math.floor(i/chunkSize) + 1}...`, true);
+                        
+                        await gapi.client.gmail.users.messages.batchDelete({
+                            'userId': 'me',
+                            'ids': chunk
+                        });
+                    }
+                    updateAuthStatus(`Successfully deleted ${allIds.length} emails.`, true);
+                    refreshEmails();
+                });
+
+            } catch (e) {
+                console.error(e);
+                updateAuthStatus(`Error: ${e.message}`, false);
+            }
+        });
     }
 
     async function handleLabelAction(action) {
         const ids = getSelectedIds();
         if (ids.length === 0) {
             document.getElementById('labelAction').value = "";
-            return alert('No emails selected');
+            return showAlert('No Selection', 'Please select emails to modify.');
         }
         if (!action) return;
 
@@ -478,50 +529,16 @@
 
     function getNextPage() {
         if (nextPageToken) {
-            pageStack.push(nextPageToken); // This logic is slightly flawed for "Prev" because we need the *previous* token, but Gmail API only gives next.
-            // Correct "Prev" implementation requires storing page tokens history.
-            // For now, simple next is fine.
-            loadEmails(nextPageToken);
-        }
-    }
-    
-    // Simple Prev implementation: pop stack? 
-    // Actually, Gmail API doesn't support "prevPageToken". We have to cache tokens.
-    // Let's fix the stack logic.
-    // When we go Next, we push the CURRENT page token (or null for first page) to stack.
-    // When we go Prev, we pop the stack and load that token.
-    
-    // Wait, loadEmails takes the token to LOAD.
-    // Initial load: token = null.
-    // Response gives nextToken A.
-    // Click Next -> load(A). Response gives nextToken B.
-    // We need to store 'null' then 'A' in history to go back.
-    
-    // Let's refine this in a future update if needed, for now just basic Next.
-    // I'll implement a basic history stack.
-    
-    // Redefining loadEmails wrapper for pagination
-    let tokenHistory = [];
-    
-    async function getNextPage() {
-        if (nextPageToken) {
-            tokenHistory.push(getCurrentPageToken()); // We need to know what the CURRENT page token was.
-            // Actually, easier: just push the token we are ABOUT to use to a history stack?
-            // No.
-            // Let's just disable Prev for now or implement it properly.
-            // Proper way:
-            // History: [null, 'tokenA', 'tokenB']
-            // Current Index: 0 -> null
-            // Next -> Index 1 -> 'tokenA'
-            
-            // Let's just do simple Next for now to satisfy requirements.
+            pageStack.push(currentPageToken);
             loadEmails(nextPageToken);
         }
     }
 
     function getPrevPage() {
-        // Not implemented fully in this snippet without state tracking
-        alert('Previous page not fully supported in this demo version');
+        if (pageStack.length > 0) {
+            const prevToken = pageStack.pop();
+            loadEmails(prevToken);
+        }
     }
 
 </script>
