@@ -32,14 +32,13 @@ A powerful, responsive web application to manage your Gmail inbox efficiently. B
 
 ## 📸 Screenshots
 
-<!-- Add your snapshots here -->
 |Search Mail | Confirm Delete Batch |
 |:---:|:---:|
-| ![Search Mail](path/to/snap.png) | ![Confirm Delete Batch](path/to/snap.png) |
+| ![Search Mail](https://github.com/AdxStackDev/gmail_bulk_manger/blob/master/snaps/search_mail.png) | ![Confirm Delete Batch](https://github.com/AdxStackDev/gmail_bulk_manger/blob/master/snaps/confirm_delete.png) |
 
-| Toggle Theme | Email Modal |
+| Toggle Theme | Delete Entire Mails |
 |:---:|:---:|
-| ![Toggle Theme](path/to/snap.png) | ![Email Modal](path/to/snap.png) |
+| ![Toggle Theme](https://github.com/AdxStackDev/gmail_bulk_manger/blob/master/snaps/ThemeToggle.png) | ![Delete Entire Mails](https://github.com/AdxStackDev/gmail_bulk_manger/blob/master/snaps/delete_all_mail.png) |
 
 ## 🔄 Request Flow
 
@@ -75,26 +74,26 @@ This chart details the internal logic for the "Delete All from Sender" feature, 
 
 ```mermaid
 flowchart TD
-    A[User Clicks 'Delete All from Sender'] --> B{Is Sender Selected?}
-    B -- Yes --> C[Get Sender Email from Selection]
-    B -- No --> D[Prompt User for Email]
+    A["User Clicks 'Delete All from Sender'"] --> B{"Is Sender Selected?"}
+    B -- Yes --> C["Get Sender Email from Selection"]
+    B -- No --> D["Prompt User for Email"]
     D --> C
-    C --> E[Confirm Action (Modal)]
+    C --> E["Confirm Action (Modal)"]
     E -- Cancel --> F[Stop]
-    E -- Confirm --> G[Search API for Sender]
+    E -- Confirm --> G["Search API for Sender"]
     
-    G --> H{Emails Found?}
-    H -- No --> I[Show Alert 'No Emails']
-    H -- Yes --> J[Confirm Count (Modal)]
+    G --> H{"Emails Found?"}
+    H -- No --> I["Show Alert 'No Emails'"]
+    H -- Yes --> J["Confirm Count (Modal)"]
     
-    J -- Confirm --> K[Start Batch Process]
-    K --> L[Split IDs into Chunks of 1000]
-    L --> M[Loop through Chunks]
-    M --> N[Call batchDelete API]
-    N --> O[Update Progress UI]
+    J -- Confirm --> K["Start Batch Process"]
+    K --> L["Split IDs into Chunks of 1000"]
+    L --> M["Loop through Chunks"]
+    M --> N["Call batchDelete API"]
+    N --> O["Update Progress UI"]
     O --> M
-    M -- Done --> P[Refresh Email List]
-    P --> Q[Show Success Message]
+    M -- Done --> P["Refresh Email List"]
+    P --> Q["Show Success Message"]
 ```
 
 ## 📥 Setup Instructions
@@ -122,4 +121,4 @@ flowchart TD
 *   **Tokens**: Access tokens are stored in the browser's LocalStorage for session persistence.
 
 ---
-*Built with ❤️ for efficient email management.*
+*Built with ❤️ for efficient email management by AdxStackDev.*
