@@ -1,10 +1,8 @@
 <?php
-$creds_file = __DIR__ . '/credentials.json';
-if (!file_exists($creds_file)) {
-    die('Error: credentials.json not found');
-}
-$creds = json_decode(file_get_contents($creds_file), true);
-$client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '';
+require_once __DIR__ . '/config.php';
+$config = loadCredentials();
+$client_id = $config['client_id'];
+$csrf_token = $config['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -17,7 +15,8 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
             darkMode: 'class',
         }
         window.GMAIL_CONFIG = {
-            clientId: "<?php echo $client_id; ?>"
+            clientId: "<?php echo htmlspecialchars($client_id, ENT_QUOTES, 'UTF-8'); ?>",
+            csrfToken: "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>"
         };
     </script>
 </head>
@@ -32,6 +31,7 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
         </h1>
         <div class="flex flex-wrap justify-center items-center gap-4">
             <a href="manage_gmail.php" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm md:text-base">Back to Manager</a>
+            <a href="senders.php" class="text-purple-600 dark:text-purple-400 hover:underline font-medium text-sm md:text-base">Senders Manager</a>
             <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 <svg id="moonIcon" class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
@@ -83,30 +83,57 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
     </div>
 </div>
 
-<script src="js/gmail_api.js"></script>
+<script src="js/gmail_api.js" onerror="console.error('Failed to load gmail_api.js')"></script>
 <script>
-    initTheme();
+    // Debug logging
+    console.log('Gmail Config:', window.GMAIL_CONFIG);
+    
+    // Initialize theme
+    if (typeof initTheme === 'function') {
+        initTheme();
+    } else {
+        console.error('initTheme function not found');
+    }
+
+    // Check if functions are defined
+    if (typeof gapiLoaded === 'undefined') {
+        console.error('gapiLoaded function not found - gmail_api.js may not have loaded');
+    }
+    if (typeof gisLoaded === 'undefined') {
+        console.error('gisLoaded function not found - gmail_api.js may not have loaded');
+    }
 
     // Override onAuthSuccess to load stats
-    const originalOnAuthSuccess = onAuthSuccess;
-    onAuthSuccess = function() {
-        originalOnAuthSuccess();
-        loadStats();
-    };
+    if (typeof onAuthSuccess !== 'undefined') {
+        const originalOnAuthSuccess = onAuthSuccess;
+        onAuthSuccess = function() {
+            console.log('Auth success - loading stats');
+            originalOnAuthSuccess();
+            loadStats();
+        };
+    }
 
     async function loadStats() {
+        if (typeof checkRateLimit !== 'undefined' && !checkRateLimit()) return;
+        
         try {
+            console.log('Loading stats...');
             const profile = await gapi.client.gmail.users.getProfile({
                 'userId': 'me'
             });
             
+            console.log('Profile loaded:', profile.result);
             document.getElementById('totalMessages').textContent = profile.result.messagesTotal.toLocaleString();
             document.getElementById('totalThreads').textContent = profile.result.threadsTotal.toLocaleString();
             document.getElementById('emailAddress').textContent = profile.result.emailAddress;
             
         } catch (e) {
-            console.error(e);
-            showAlert('Error', 'Failed to load stats: ' + e.message);
+            console.error('Error loading stats:', e);
+            if (typeof showAlert === 'function') {
+                showAlert('Error', 'Failed to load stats: ' + e.message);
+            } else {
+                alert('Failed to load stats: ' + e.message);
+            }
         }
     }
 
@@ -165,7 +192,7 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
         });
     }
 </script>
-<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
-<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()" onerror="console.error('Failed to load Google API')"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()" onerror="console.error('Failed to load Google Identity Services')"></script>
 </body>
 </html>

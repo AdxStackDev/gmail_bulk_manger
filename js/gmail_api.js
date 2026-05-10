@@ -11,26 +11,97 @@ let gisInited = false;
 
 // --- Session Management ---
 
+// Token storage with encryption flag
+const TOKEN_STORAGE_KEY = 'gmail_access_token';
+const TOKEN_EXPIRY_KEY = 'gmail_token_expiry';
+
+// Rate limiting configuration
+const RATE_LIMIT = {
+    maxRequests: 100,
+    windowMs: 60000, // 1 minute
+    requests: [],
+};
+
+/**
+ * Check rate limit before making API calls
+ * @returns {boolean} True if within rate limit
+ */
+function checkRateLimit() {
+    const now = Date.now();
+    // Remove old requests outside the window
+    RATE_LIMIT.requests = RATE_LIMIT.requests.filter(time => now - time < RATE_LIMIT.windowMs);
+    
+    if (RATE_LIMIT.requests.length >= RATE_LIMIT.maxRequests) {
+        showAlert('Rate Limit', 'Too many requests. Please wait a moment and try again.');
+        return false;
+    }
+    
+    RATE_LIMIT.requests.push(now);
+    return true;
+}
+
 function saveSession(token) {
     if (token) {
-        localStorage.setItem('gmail_access_token', JSON.stringify(token));
-        localStorage.setItem('gmail_token_expiry', Date.now() + (token.expires_in * 1000));
+        try {
+            // Store token with timestamp
+            const tokenData = {
+                token: token,
+                timestamp: Date.now(),
+                expiresAt: Date.now() + (token.expires_in * 1000)
+            };
+            
+            sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(tokenData));
+            sessionStorage.setItem(TOKEN_EXPIRY_KEY, tokenData.expiresAt.toString());
+            
+            // Clear localStorage (migrate old tokens)
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+            localStorage.removeItem(TOKEN_EXPIRY_KEY);
+        } catch (e) {
+            console.error('Failed to save session:', e);
+        }
     }
 }
 
 function loadSession() {
-    const tokenStr = localStorage.getItem('gmail_access_token');
-    const expiry = localStorage.getItem('gmail_token_expiry');
+    try {
+        // Try sessionStorage first (more secure)
+        let tokenStr = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+        let expiry = sessionStorage.getItem(TOKEN_EXPIRY_KEY);
+        
+        // Fallback to localStorage for backward compatibility
+        if (!tokenStr) {
+            tokenStr = localStorage.getItem(TOKEN_STORAGE_KEY);
+            expiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+            
+            // Migrate to sessionStorage
+            if (tokenStr && expiry) {
+                const tokenData = JSON.parse(tokenStr);
+                sessionStorage.setItem(TOKEN_STORAGE_KEY, tokenStr);
+                sessionStorage.setItem(TOKEN_EXPIRY_KEY, expiry);
+                localStorage.removeItem(TOKEN_STORAGE_KEY);
+                localStorage.removeItem(TOKEN_EXPIRY_KEY);
+            }
+        }
 
-    if (tokenStr && expiry && Date.now() < parseInt(expiry)) {
-        return JSON.parse(tokenStr);
+        if (tokenStr && expiry && Date.now() < parseInt(expiry)) {
+            const tokenData = JSON.parse(tokenStr);
+            return tokenData.token || tokenData;
+        }
+    } catch (e) {
+        console.error('Failed to load session:', e);
     }
     return null;
 }
 
 function clearSession() {
-    localStorage.removeItem('gmail_access_token');
-    localStorage.removeItem('gmail_token_expiry');
+    try {
+        sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+        sessionStorage.removeItem(TOKEN_EXPIRY_KEY);
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(TOKEN_EXPIRY_KEY);
+    } catch (e) {
+        console.error('Failed to clear session:', e);
+    }
 }
 
 // --- UI Utilities ---

@@ -1,10 +1,8 @@
 <?php
-$creds_file = __DIR__ . '/credentials.json';
-if (!file_exists($creds_file)) {
-    die('Error: credentials.json not found');
-}
-$creds = json_decode(file_get_contents($creds_file), true);
-$client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '';
+require_once __DIR__ . '/config.php';
+$config = loadCredentials();
+$client_id = $config['client_id'];
+$csrf_token = $config['csrf_token'];
 ?>
 <!DOCTYPE html>
 <html>
@@ -17,7 +15,8 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
             darkMode: 'class',
         }
         window.GMAIL_CONFIG = {
-            clientId: "<?php echo $client_id; ?>"
+            clientId: "<?php echo htmlspecialchars($client_id, ENT_QUOTES, 'UTF-8'); ?>",
+            csrfToken: "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>"
         };
     </script>
     <style>
@@ -82,6 +81,7 @@ $client_id = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '
             Gmail Manager
         </h1>
         <div class="flex flex-wrap justify-center items-center gap-4">
+            <a href="senders.php" class="text-purple-600 dark:text-purple-400 hover:underline font-medium text-sm md:text-base">Senders Manager</a>
             <a href="all_emails.php" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm md:text-base">All Emails Stats</a>
             <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                 <!-- Sun Icon -->
