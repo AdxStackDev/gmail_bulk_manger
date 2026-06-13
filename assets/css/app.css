@@ -1,0 +1,78 @@
+/*
+ * Gmail Manager - shared component styles.
+ *
+ * Extracted from the previously duplicated inline <style> blocks in the page
+ * templates. Tailwind utility classes are still provided by the CDN; this file
+ * holds the custom component styles only.
+ */
+
+/* ---- Email list rows (manager) ---- */
+.email-row {
+    transition: background-color 0.2s;
+}
+.email-row:hover {
+    background-color: #f3f4f6;
+}
+
+/* ---- Email view modal (manager) ---- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 50;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+.modal-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.modal-body {
+    padding: 1rem;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+.label-badge {
+    font-size: 0.75rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 9999px;
+    margin-right: 0.25rem;
+    background-color: #e5e7eb;
+    color: #374151;
+}
+
+/* ---- Senders list (senders) ---- */
+.sender-row {
+    transition: all 0.2s;
+}
+.sender-row:hover {
+    transform: translateX(4px);
+}
+.progress-bar {
+    transition: width 0.3s ease;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+.loading {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

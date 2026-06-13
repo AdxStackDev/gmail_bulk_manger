@@ -3,43 +3,27 @@ require_once __DIR__ . '/config.php';
 $config = loadCredentials();
 $client_id = $config['client_id'];
 $csrf_token = $config['csrf_token'];
+
+// View configuration for the shared head/header partials
+$pageTitle = 'Gmail Stats & Cleanup';
+$headingText = 'Gmail Cleanup';
+$headingClasses = 'from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400';
+$navLinks = [
+    ['href' => 'manage_gmail.php', 'label' => 'Back to Manager', 'class' => 'text-blue-600 dark:text-blue-400'],
+    ['href' => 'senders.php', 'label' => 'Senders Manager', 'class' => 'text-purple-600 dark:text-purple-400'],
+];
+$authBtnClass = 'bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow';
+$signoutBtnClass = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow';
 ?>
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Gmail Stats & Cleanup</title>
-    <meta charset="utf-8"/>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-        }
-        window.GMAIL_CONFIG = {
-            clientId: "<?php echo htmlspecialchars($client_id, ENT_QUOTES, 'UTF-8'); ?>",
-            csrfToken: "<?php echo htmlspecialchars($csrf_token, ENT_QUOTES, 'UTF-8'); ?>"
-        };
-    </script>
-</head>
+<html lang="en">
+<?php include __DIR__ . '/app/views/partials/head.php'; ?>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen font-sans transition-colors duration-300">
 
 <div id="authStatus" class="fixed top-4 right-4 px-4 py-2 rounded shadow-lg hidden z-50"></div>
 
 <div class="container mx-auto px-4 py-8 max-w-7xl">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-600 dark:from-red-400 dark:to-orange-400 text-center md:text-left">
-            Gmail Cleanup
-        </h1>
-        <div class="flex flex-wrap justify-center items-center gap-4">
-            <a href="manage_gmail.php" class="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm md:text-base">Back to Manager</a>
-            <a href="senders.php" class="text-purple-600 dark:text-purple-400 hover:underline font-medium text-sm md:text-base">Senders Manager</a>
-            <button id="themeToggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                <svg id="moonIcon" class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-            </button>
-            <button id="authorize_button" onclick="handleAuthClick()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow hidden text-sm md:text-base">Authorize</button>
-            <button id="signout_button" onclick="handleSignoutClick()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded shadow hidden text-sm md:text-base">Sign Out</button>
-        </div>
-    </div>
+    <?php include __DIR__ . '/app/views/partials/header.php'; ?>
 
     <div id="controls" class="hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -83,115 +67,17 @@ $csrf_token = $config['csrf_token'];
     </div>
 </div>
 
-<script src="js/gmail_api.js" onerror="console.error('Failed to load gmail_api.js')"></script>
-<script>
-    // Debug logging
-    console.log('Gmail Config:', window.GMAIL_CONFIG);
-    
-    // Initialize theme
-    if (typeof initTheme === 'function') {
-        initTheme();
-    } else {
-        console.error('initTheme function not found');
-    }
-
-    // Check if functions are defined
-    if (typeof gapiLoaded === 'undefined') {
-        console.error('gapiLoaded function not found - gmail_api.js may not have loaded');
-    }
-    if (typeof gisLoaded === 'undefined') {
-        console.error('gisLoaded function not found - gmail_api.js may not have loaded');
-    }
-
-    // Override onAuthSuccess to load stats
-    if (typeof onAuthSuccess !== 'undefined') {
-        const originalOnAuthSuccess = onAuthSuccess;
-        onAuthSuccess = function() {
-            console.log('Auth success - loading stats');
-            originalOnAuthSuccess();
-            loadStats();
-        };
-    }
-
-    async function loadStats() {
-        if (typeof checkRateLimit !== 'undefined' && !checkRateLimit()) return;
-        
-        try {
-            console.log('Loading stats...');
-            const profile = await gapi.client.gmail.users.getProfile({
-                'userId': 'me'
-            });
-            
-            console.log('Profile loaded:', profile.result);
-            document.getElementById('totalMessages').textContent = profile.result.messagesTotal.toLocaleString();
-            document.getElementById('totalThreads').textContent = profile.result.threadsTotal.toLocaleString();
-            document.getElementById('emailAddress').textContent = profile.result.emailAddress;
-            
-        } catch (e) {
-            console.error('Error loading stats:', e);
-            if (typeof showAlert === 'function') {
-                showAlert('Error', 'Failed to load stats: ' + e.message);
-            } else {
-                alert('Failed to load stats: ' + e.message);
-            }
-        }
-    }
-
-    async function deleteAllEmails() {
-        showConfirm('NUCLEAR OPTION', 'WARNING: You are about to delete ALL emails in your account. This cannot be undone. Are you absolutely sure?', async () => {
-            // Double confirmation
-            const verification = prompt("To confirm, type 'DELETE' in the box below:");
-            if (verification !== 'DELETE') {
-                return showAlert('Cancelled', 'Deletion cancelled. Verification failed.');
-            }
-
-            updateAuthStatus('Starting deletion...', true);
-            
-            try {
-                let pageToken = null;
-                let hasMore = true;
-                let deletedCount = 0;
-
-                while (hasMore) {
-                    // List messages
-                    const response = await gapi.client.gmail.users.messages.list({
-                        'userId': 'me',
-                        'maxResults': 500,
-                        'pageToken': pageToken
-                    });
-
-                    const messages = response.result.messages;
-                    if (!messages || messages.length === 0) {
-                        hasMore = false;
-                        break;
-                    }
-
-                    // Batch delete
-                    const ids = messages.map(m => m.id);
-                    await gapi.client.gmail.users.messages.batchDelete({
-                        'userId': 'me',
-                        'ids': ids
-                    });
-
-                    deletedCount += ids.length;
-                    updateAuthStatus(`Deleted ${deletedCount} emails...`, true);
-
-                    pageToken = response.result.nextPageToken;
-                    if (!pageToken) hasMore = false;
-                }
-
-                updateAuthStatus('All emails deleted.', true);
-                loadStats();
-                showAlert('Complete', `Successfully deleted ${deletedCount} emails.`);
-
-            } catch (e) {
-                console.error(e);
-                updateAuthStatus('Error during deletion', false);
-                showAlert('Error', 'An error occurred: ' + e.message);
-            }
-        });
-    }
-</script>
+<!-- UI layer -->
+<script src="js/ui/toast.js"></script>
+<script src="js/ui/modal.js"></script>
+<script src="js/ui/theme.js"></script>
+<!-- Core layer -->
+<script src="js/core/session.js"></script>
+<script src="js/core/gmailClient.js"></script>
+<script src="js/core/auth.js"></script>
+<!-- Page layer -->
+<script src="js/pages/stats.js"></script>
+<!-- Google SDKs -->
 <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()" onerror="console.error('Failed to load Google API')"></script>
 <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()" onerror="console.error('Failed to load Google Identity Services')"></script>
 </body>

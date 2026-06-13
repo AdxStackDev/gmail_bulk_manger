@@ -262,28 +262,51 @@ Use Gmail search operators:
 
 ```
 gmail-manager/
-├── all_emails.php          # Stats & cleanup dashboard
-├── manage_gmail.php        # Main email management interface
-├── senders.php             # NEW! Senders analysis & batch delete
-├── config.php              # Security configuration & credentials loader
-├── credentials.json        # OAuth credentials (DO NOT COMMIT)
-├── credentials.json.example # Template for credentials
-├── .gitignore              # Git ignore rules
-├── package.json            # NPM dependencies (optional)
-├── tailwind.config.js      # Tailwind configuration
-├── README.md               # This file
+├── manage_gmail.php          # Page entry: main email management interface
+├── all_emails.php            # Page entry: stats & cleanup dashboard
+├── senders.php               # Page entry: senders analysis & batch delete
+├── config.php                # Bootstrap: wires session/headers/config (BC entry)
+├── credentials.json          # OAuth credentials (DO NOT COMMIT)
+├── credentials.json.example  # Template for credentials
+├── .gitignore                # Git ignore rules
+├── package.json              # NPM dependencies (optional CSS build)
+├── tailwind.config.js        # Tailwind configuration
+├── README.md                 # This file
+├── app/                      # PHP backend (not the page entry points)
+│   ├── Config.php            # Credential loader
+│   ├── Security/
+│   │   ├── Session.php       # Secure session start
+│   │   ├── Csrf.php          # CSRF token issue/verify
+│   │   └── Headers.php       # CSP + security headers
+│   └── views/
+│       └── partials/
+│           ├── head.php          # Shared <head>
+│           ├── header.php        # Shared nav/header bar
+│           └── theme-toggle.php  # Theme toggle button
+├── assets/
+│   └── css/
+│       └── app.css           # Shared component styles (was inline <style>)
 ├── js/
-│   └── gmail_api.js        # Core Gmail API logic
+│   ├── core/                 # Auth + API + session logic
+│   │   ├── session.js        # Token persistence
+│   │   ├── gmailClient.js    # gapi/GIS bootstrap + rate limiting
+│   │   └── auth.js           # Sign-in/out flow + auth UI state
+│   ├── ui/                   # Presentation behavior
+│   │   ├── toast.js          # Status notifications
+│   │   ├── modal.js          # Alert/confirm dialogs
+│   │   └── theme.js          # Light/dark theme
+│   └── pages/                # Per-page logic
+│       ├── manager.js        # manage_gmail.php
+│       ├── stats.js          # all_emails.php
+│       └── senders.js        # senders.php
 ├── src/
-│   └── input.css           # Tailwind source (for production build)
-├── css/
-│   └── output.css          # Compiled CSS (generated)
-└── snaps/                  # Screenshots
+│   └── input.css             # Tailwind source (for optional production build)
+└── snaps/                    # Screenshots
     ├── confirm_delete.png
     ├── delete_all_mail.png
     ├── delete_all_mails.png
     ├── search_mail.png
-    ├── sender_manager.png   # Senders Manager page
+    ├── sender_manager.png    # Senders Manager page
     └── ThemeToggle.png
 ```
 
