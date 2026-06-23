@@ -1,5 +1,6 @@
 # Credentials - NEVER commit these files
 credentials.json
+mailmanager.txt
 
 # Environment variables
 .env
