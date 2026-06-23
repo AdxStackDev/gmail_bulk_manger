@@ -4,6 +4,9 @@ $config = loadCredentials();
 $client_id = $config['client_id'];
 $csrf_token = $config['csrf_token'];
 
+// Protected page: require sign-in (redirects to login.php when signed out)
+$authMode = 'require';
+
 // View configuration for the shared head/header partials
 $pageTitle = 'Gmail Stats & Cleanup';
 $headingText = 'Gmail Cleanup';
@@ -24,6 +27,7 @@ $signoutBtnClass = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 r
 
 <div class="container mx-auto px-4 py-8 max-w-7xl">
     <?php include __DIR__ . '/app/views/partials/header.php'; ?>
+
 
     <div id="controls" class="hidden">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

@@ -4,6 +4,9 @@ $config = loadCredentials();
 $client_id = $config['client_id'];
 $csrf_token = $config['csrf_token'];
 
+// Protected page: require sign-in (redirects to login.php when signed out)
+$authMode = 'require';
+
 // View configuration for the shared head/header partials
 $pageTitle = 'Gmail Manager';
 $headingText = 'Gmail Manager';
@@ -24,6 +27,7 @@ $signoutBtnClass = 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 
 
 <div class="container mx-auto px-4 py-8 max-w-7xl">
     <?php include __DIR__ . '/app/views/partials/header.php'; ?>
+
 
     <div id="controls" class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow-lg mb-8 hidden transition-colors duration-300">
         <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">

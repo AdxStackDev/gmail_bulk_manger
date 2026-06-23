@@ -41,7 +41,9 @@ function onAuthSuccess() {
     const signoutBtn = document.getElementById('signout_button');
     const controls = document.getElementById('controls');
     const listContainer = document.getElementById('emailListContainer');
+    const loginScreen = document.getElementById('loginScreen');
 
+    if (loginScreen) loginScreen.classList.add('hidden');
     if (authBtn) authBtn.classList.add('hidden');
     if (signoutBtn) signoutBtn.classList.remove('hidden');
     if (controls) controls.classList.remove('hidden');
@@ -54,15 +56,6 @@ function onAuthSuccess() {
 
 function onSignOut() {
     updateAuthStatus('Signed Out', false);
-    const authBtn = document.getElementById('authorize_button');
-    const signoutBtn = document.getElementById('signout_button');
-    const controls = document.getElementById('controls');
-    const listContainer = document.getElementById('emailListContainer');
-    const tbody = document.getElementById('emailsBody');
-
-    if (authBtn) authBtn.classList.remove('hidden');
-    if (signoutBtn) signoutBtn.classList.add('hidden');
-    if (controls) controls.classList.add('hidden');
-    if (listContainer) listContainer.classList.add('hidden');
-    if (tbody) tbody.innerHTML = '';
+    // Session is already cleared by handleSignoutClick(); send the user to login.
+    window.location.replace('login.php');
 }
