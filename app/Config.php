@@ -16,22 +16,21 @@ final class Config
      */
     public static function credentials(): array
     {
-        $credsFile = dirname(__DIR__) . '/credentials.json';
-
-        if (!file_exists($credsFile)) {
-            die('Error: credentials.json not found. Please copy credentials.json.example to credentials.json and add your Google OAuth credentials.');
-        }
-
-        $creds = json_decode(file_get_contents($credsFile), true);
-
-        if (!$creds) {
-            die('Error: Invalid credentials.json format');
-        }
-
-        $clientId = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '';
+        $clientId = getenv('GMAIL_CLIENT_ID') ?: ($_ENV['GMAIL_CLIENT_ID'] ?? ($_SERVER['GMAIL_CLIENT_ID'] ?? ''));
 
         if ($clientId === '') {
-            die('Error: client_id not found in credentials.json');
+            $credsFile = dirname(__DIR__) . '/credentials.json';
+
+            if (file_exists($credsFile)) {
+                $creds = json_decode(file_get_contents($credsFile), true);
+                if ($creds) {
+                    $clientId = $creds['web']['client_id'] ?? $creds['installed']['client_id'] ?? '';
+                }
+            }
+        }
+
+        if ($clientId === '') {
+            die('Error: credentials.json not found or GMAIL_CLIENT_ID environment variable is missing.');
         }
 
         return [
