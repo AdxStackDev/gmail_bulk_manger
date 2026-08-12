@@ -47,7 +47,7 @@
     })();
     </script>
     <?php endif; ?>
-    <title><?php echo htmlspecialchars($pageTitle ?? 'Gmail Manager', ENT_QUOTES, 'UTF-8'); ?></title>
+    <title><?php echo htmlspecialchars($pageTitle ?? 'Adx Mail Manager', ENT_QUOTES, 'UTF-8'); ?></title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>

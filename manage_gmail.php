@@ -8,8 +8,8 @@ $csrf_token = $config['csrf_token'];
 $authMode = 'require';
 
 // View configuration for the shared head/header partials
-$pageTitle = 'Gmail Manager';
-$headingText = 'Gmail Manager';
+$pageTitle = 'Adx Mail Manager';
+$headingText = 'Adx Mail Manager';
 $headingClasses = 'from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400';
 $navLinks = [
     ['href' => 'senders.php', 'label' => 'Senders Manager', 'class' => 'text-purple-600 dark:text-purple-400'],

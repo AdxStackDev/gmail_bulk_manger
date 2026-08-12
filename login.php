@@ -6,7 +6,7 @@ $csrf_token = $config['csrf_token'];
 
 // Login page: bounce already-signed-in users back to their target page.
 $authMode = 'guest';
-$pageTitle = 'Sign In - Gmail Manager';
+$pageTitle = 'Adx Mail Manager - Powerful Inbox Cleanup';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,9 +16,9 @@ $pageTitle = 'Sign In - Gmail Manager';
 <div id="authStatus" class="fixed top-4 right-4 px-4 py-2 rounded shadow-lg hidden z-50"></div>
 
 <div class="container mx-auto px-4 py-6 max-w-7xl">
-    <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-            Gmail Manager
+    <div class="flex justify-between items-center mb-8 border-b border-gray-200 dark:border-gray-800 pb-4">
+        <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
+            Adx Mail Manager
         </h1>
         <?php include __DIR__ . '/app/views/partials/theme-toggle.php'; ?>
     </div>

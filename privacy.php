@@ -5,7 +5,7 @@ $client_id = $config['client_id'];
 $csrf_token = $config['csrf_token'];
 
 $authMode = ''; // Public page
-$pageTitle = 'Privacy Policy - Gmail Manager';
+$pageTitle = 'Privacy Policy - Adx Mail Manager';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,7 +16,7 @@ $pageTitle = 'Privacy Policy - Gmail Manager';
     <!-- Header -->
     <div class="flex justify-between items-center mb-8 border-b border-gray-200 dark:border-gray-800 pb-4">
         <a href="manage_gmail.php" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-            Gmail Manager
+            Adx Mail Manager
         </a>
         <div class="flex items-center gap-4">
             <a href="manage_gmail.php" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">Back to App</a>
@@ -31,12 +31,12 @@ $pageTitle = 'Privacy Policy - Gmail Manager';
 
         <section class="space-y-3">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white border-b pb-1 border-gray-200 dark:border-gray-700">1. Introduction</h2>
-            <p>Welcome to <strong>Gmail Manager</strong> ("we", "our", or "us"). We respect your privacy and are committed to protecting the data you share when using our web application located at <code class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">mails-managerprov1-5.onrender.com</code>.</p>
+            <p>Welcome to <strong>Adx Mail Manager</strong> ("we", "our", or "us"). We respect your privacy and are committed to protecting the data you share when using our web application located at <code class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">mails-managerprov1-5.onrender.com</code>.</p>
         </section>
 
         <section class="space-y-3">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white border-b pb-1 border-gray-200 dark:border-gray-700">2. Information We Access</h2>
-            <p>Gmail Manager interacts with your Google account via official Google OAuth 2.0 APIs. We access:</p>
+            <p>Adx Mail Manager interacts with your Google account via official Google OAuth 2.0 APIs. We access:</p>
             <ul class="list-disc list-inside space-y-1 pl-2 text-sm">
                 <td><strong>Google Profile Information:</strong> Your email address and basic profile info to authenticate you.</td>
                 <td><strong>Gmail API Data:</strong> Message headers (From, Subject, Date), message body, labels, and thread counts required to display and clean up your emails.</td>
@@ -61,13 +61,13 @@ $pageTitle = 'Privacy Policy - Gmail Manager';
         <section class="space-y-3">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white border-b pb-1 border-gray-200 dark:border-gray-700">5. Google API Limited Use Disclosure</h2>
             <p class="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 p-4 rounded-lg text-sm text-blue-900 dark:text-blue-200">
-                Gmail Manager's use and transfer of information received from Google APIs to any other app will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="underline font-semibold">Google API Services User Data Policy</a>, including the Limited Use requirements.
+                Adx Mail Manager's use and transfer of information received from Google APIs to any other app will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="underline font-semibold">Google API Services User Data Policy</a>, including the Limited Use requirements.
             </p>
         </section>
 
         <section class="space-y-3">
             <h2 class="text-xl font-bold text-gray-900 dark:text-white border-b pb-1 border-gray-200 dark:border-gray-700">6. Revoking Access</h2>
-            <p>You can revoke Gmail Manager's access to your Google account at any time by visiting your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline">Google Account Security Settings</a>.</p>
+            <p>You can revoke Adx Mail Manager's access to your Google account at any time by visiting your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 underline">Google Account Security Settings</a>.</p>
         </section>
 
         <section class="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
