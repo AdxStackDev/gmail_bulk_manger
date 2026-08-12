@@ -50,6 +50,7 @@
     <title><?php echo htmlspecialchars($pageTitle ?? 'Adx Mail Manager', ENT_QUOTES, 'UTF-8'); ?></title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="google-site-verification" content="google0cbdbeee3797f379" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
