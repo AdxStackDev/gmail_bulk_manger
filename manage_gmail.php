@@ -104,6 +104,7 @@ $signoutBtnClass = 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 
             </div>
         </div>
     </div>
+    <?php include __DIR__ . '/app/views/partials/footer.php'; ?>
 </div>
 
 <!-- Email View Modal -->

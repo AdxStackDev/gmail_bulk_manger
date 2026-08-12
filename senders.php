@@ -119,6 +119,7 @@ $signoutBtnClass = 'bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 r
             </div>
         </div>
     </div>
+    <?php include __DIR__ . '/app/views/partials/footer.php'; ?>
 </div>
 
 <!-- UI layer -->

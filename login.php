@@ -24,6 +24,7 @@ $pageTitle = 'Sign In - Gmail Manager';
     </div>
 
     <?php include __DIR__ . '/app/views/partials/login.php'; ?>
+    <?php include __DIR__ . '/app/views/partials/footer.php'; ?>
 </div>
 
 <!-- UI layer -->
